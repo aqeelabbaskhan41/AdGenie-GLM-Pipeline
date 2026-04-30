@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GLM-Image Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #0a0a0c;
+  --s1:       #111116;
+  --s2:       #18181f;
+  --s3:       #222230;
+  --border:   #2c2c3a;
+  --border2:  #3a3a4e;
+  --accent:   #6c63f5;
+  --accent2:  #a78bfa;
+  --accent3:  #f472b6;
+  --text:     #eceaf8;
+  --muted:    #7470a0;
+  --danger:   #f87171;
+  --success:  #4ade80;
+  --mono:     'DM Mono', monospace;
+  --sans:     'Cabinet Grotesk', sans-serif;
+  --r:        10px;
+  --r2:       14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* subtle grid bg */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(var(--s2) 1px,transparent 1px),linear-gradient(90deg,var(--s2) 1px,transparent 1px);
+  background-size:40px 40px;opacity:.35;pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;max-width:1160px;margin:0 auto;padding:0 20px 80px;}
+
+/* ── Header ── */
+header{padding:40px 0 28px;border-bottom:1px solid var(--border);margin-bottom:28px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.logo-row{display:flex;flex-direction:column;gap:3px;}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;}
+.logo-title{font-size:2.2rem;font-weight:800;letter-spacing:-.03em;line-height:1;
+  background:linear-gradient(120deg,var(--text) 30%,var(--accent2) 65%,var(--accent3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.server-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.server-bar label{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.server-bar input{background:var(--s2);border:1px solid var(--border);color:var(--text);
+  font-family:var(--mono);font-size:12px;padding:7px 12px;border-radius:var(--r);
+  width:320px;outline:none;transition:border-color .2s;}
+.server-bar input:focus{border-color:var(--accent);}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all .3s;}
+.dot.on {background:var(--success);box-shadow:0 0 6px var(--success);}
+.dot.off{background:var(--danger); box-shadow:0 0 6px var(--danger);}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:2px;background:var(--s1);border:1px solid var(--border);
+  border-radius:var(--r2);padding:4px;width:fit-content;margin-bottom:24px;}
+.tab{font-family:var(--sans);font-weight:700;font-size:13px;background:none;border:none;
+  color:var(--muted);padding:9px 22px;border-radius:9px;cursor:pointer;transition:all .18s;letter-spacing:.01em;}
+.tab.active{background:var(--accent);color:#fff;box-shadow:0 2px 14px rgba(108,99,245,.4);}
+.tab-panel{display:none;} .tab-panel.active{display:block;}
+
+/* ── Layout ── */
+.grid{display:grid;grid-template-columns:400px 1fr;gap:18px;align-items:start;}
+@media(max-width:840px){.grid{grid-template-columns:1fr;}}
+
+/* ── Panel ── */
+.panel{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:22px;}
+.ptitle{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+
+/* ── Form ── */
+.field{margin-bottom:16px;}
+.field label{display:flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:6px;}
+.tag{font-size:9px;background:var(--s3);border:1px solid var(--border);
+  color:var(--accent2);padding:1px 6px;border-radius:4px;letter-spacing:.04em;}
+textarea,input[type=number],select,input[type=text]{
+  width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);
+  font-family:var(--sans);font-size:13.5px;padding:10px 13px;border-radius:var(--r);
+  outline:none;transition:border-color .18s,box-shadow .18s;appearance:none;}
+textarea:focus,input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,245,.12);}
+textarea{resize:vertical;min-height:80px;line-height:1.55;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+
+.range-wrap{display:flex;align-items:center;gap:10px;}
+input[type=range]{flex:1;height:3px;-webkit-appearance:none;appearance:none;
+  background:var(--border);border-radius:2px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;
+  border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(108,99,245,.22);
+  cursor:pointer;transition:transform .14s;}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25);}
+.rval{font-family:var(--mono);font-size:11px;color:var(--accent2);min-width:30px;text-align:right;}
+
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
+
+/* Tag list (body lines) */
+.tag-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.tag-item{display:flex;align-items:center;gap:5px;background:var(--s3);
+  border:1px solid var(--border2);border-radius:20px;padding:4px 10px 4px 12px;
+  font-size:12px;color:var(--text);}
+.tag-item button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;
+  line-height:1;padding:0;transition:color .15s;}
+.tag-item button:hover{color:var(--danger);}
+.add-row{display:flex;gap:7px;margin-top:6px;}
+.add-row input{flex:1;}
+.btn-add{background:var(--s3);border:1px solid var(--border2);color:var(--accent2);
+  padding:8px 14px;border-radius:var(--r);cursor:pointer;font-size:13px;font-family:var(--sans);
+  font-weight:700;transition:all .15s;white-space:nowrap;}
+.btn-add:hover{border-color:var(--accent);color:var(--accent);}
+
+/* Generate button */
+.btn-gen{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;
+  border-radius:var(--r);font-family:var(--sans);font-size:14px;font-weight:700;
+  cursor:pointer;letter-spacing:.02em;transition:all .18s;position:relative;overflow:hidden;
+  margin-top:4px;}
+.btn-gen::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(120deg,transparent 40%,rgba(255,255,255,.07));pointer-events:none;}
+.btn-gen:hover:not(:disabled){background:#5b53e0;transform:translateY(-1px);
+  box-shadow:0 8px 22px rgba(108,99,245,.38);}
+.btn-gen:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+
+/* Progress */
+.prog-wrap{height:2px;background:var(--border);border-radius:2px;
+  overflow:hidden;margin-top:12px;opacity:0;transition:opacity .3s;}
+.prog-wrap.vis{opacity:1;}
+.prog{height:100%;width:40%;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));
+  border-radius:2px;animation:slide 1.3s ease-in-out infinite;}
+@keyframes slide{0%{transform:translateX(-100%);}100%{transform:translateX(350%);}}
+
+/* Toast */
+.toast{font-family:var(--mono);font-size:11px;padding:9px 13px;border-radius:var(--r);
+  margin-top:12px;display:none;border-left:3px solid;line-height:1.55;}
+.toast.err {display:block;background:rgba(248,113,113,.08);border-color:var(--danger);color:var(--danger);}
+.toast.ok  {display:block;background:rgba(74,222,128,.08); border-color:var(--success);color:var(--success);}
+.toast.inf {display:block;background:rgba(108,99,245,.08); border-color:var(--accent);color:var(--accent2);}
+
+/* Upload zone */
+.drop{border:2px dashed var(--border);border-radius:var(--r);padding:24px 14px;text-align:center;
+  cursor:pointer;transition:all .18s;position:relative;}
+.drop:hover,.drop.drag{border-color:var(--accent);background:rgba(108,99,245,.04);}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.drop p{font-size:12px;color:var(--muted);pointer-events:none;}
+.drop-icon{font-size:24px;margin-bottom:5px;pointer-events:none;}
+.drop-preview{max-width:100%;max-height:140px;border-radius:8px;object-fit:contain;display:none;}
+
+/* Example chips */
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
+.chip{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid var(--border);
+  color:var(--muted);padding:4px 10px;border-radius:20px;cursor:pointer;
+  white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis;transition:all .14s;}
+.chip:hover{border-color:var(--accent);color:var(--accent2);}
+
+/* ── Output panel ── */
+.out-panel{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);
+  overflow:hidden;min-height:520px;display:flex;flex-direction:column;}
+.out-bar{padding:13px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.out-label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+.out-meta{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.out-body{flex:1;display:flex;align-items:center;justify-content:center;
+  padding:22px;position:relative;min-height:460px;}
+.out-empty{text-align:center;color:var(--muted);}
+.out-empty .ei{font-size:40px;margin-bottom:10px;opacity:.25;}
+.out-empty p{font-family:var(--mono);font-size:11px;letter-spacing:.06em;}
+.out-img{max-width:100%;max-height:660px;border-radius:10px;display:none;object-fit:contain;
+  animation:img-in .35s ease;}
+@keyframes img-in{from{opacity:0;transform:scale(.97);}to{opacity:1;transform:scale(1);}}
+
+/* Spinner overlay */
+.spin-ov{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  flex-direction:column;gap:14px;background:var(--s1);border-radius:var(--r2);z-index:2;}
+.spin-ov.vis{display:flex;}
+.spinner{width:40px;height:40px;border:2px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin-label{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;line-height:1.7;}
+
+/* Prompt preview (Ad tab) */
+.prompt-preview{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);
+  padding:10px 13px;font-family:var(--mono);font-size:10px;color:var(--muted);
+  line-height:1.6;margin-top:8px;max-height:90px;overflow-y:auto;display:none;word-break:break-word;}
+
+/* Download bar */
+.dl-bar{padding:13px 18px;border-top:1px solid var(--border);
+  display:none;gap:9px;align-items:center;flex-shrink:0;}
+.dl-bar.vis{display:flex;}
+.btn-dl{font-family:var(--sans);font-size:12px;font-weight:700;padding:7px 18px;
+  border-radius:var(--r);border:1px solid var(--accent);color:var(--accent2);
+  background:rgba(108,99,245,.08);cursor:pointer;transition:all .18s;}
+.btn-dl:hover{background:var(--accent);color:#fff;}
+.size-tag{font-family:var(--mono);font-size:10px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- Header -->
+<header>
+  <div class="logo-row">
+    <span class="eyebrow">zai-org / GLM-Image</span>
+    <h1 class="logo-title">GLM Studio</h1>
+  </div>
+  <div class="server-bar">
+    <label>Server URL</label>
+    <input id="serverUrl" type="text"
+      value="https://8000-01kq83ptv6r2e6acmaq7hptbnx.cloudspaces.litng.ai"
+      placeholder="https://your-server"/>
+    <div class="dot" id="dot" title="Server status"></div>
+  </div>
+</header>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('t2i',this)">Text → Image</button>
+  <button class="tab" onclick="switchTab('i2i',this)">Image → Image</button>
+  <button class="tab" onclick="switchTab('ad',this)">Ad Builder</button>
+</div>
+
+<div class="grid">
+
+  <!-- ── LEFT: Control panels ── -->
+  <div>
+
+    <!-- T2I -->
+    <div class="tab-panel active" id="panel-t2i">
+      <div class="panel">
+        <div class="ptitle">// text-to-image</div>
+        <div class="field">
+          <label>Prompt</label>
+          <textarea id="t2i-prompt" placeholder="Describe the image…">A beautifully designed university event poster with "Open House 2025" as the headline and "Join us on 23rd May" as the subtext, modern campus background, professional layout, vibrant colors</textarea>
+        </div>
+        <div class="chips" id="t2i-chips"></div>
+        <hr class="divider"/>
+        <div class="row2">
+          <div class="field">
+            <label>Width <span class="tag">px</span></label>
+            <select id="t2i-w">
+              <option value="512">512</option><option value="768">768</option>
+              <option value="960" selected>960</option><option value="1024">1024</option>
+              <option value="1280">1280</option><option value="1536">1536</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Height <span class="tag">px</span></label>
+            <select id="t2i-h">
+              <option value="512">512</option><option value="768">768</option>
+              <option value="1024">1024</option><option value="1280" selected>1280</option>
+              <option value="1536">1536</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Steps</label>
+          <div class="range-wrap">
+            <input type="range" id="t2i-steps" min="10" max="60" step="5" value="30"
+              oninput="document.getElementById('t2i-sv').textContent=this.value"/>
+            <span class="rval" id="t2i-sv">30</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Guidance</label>
+          <div class="range-wrap">
+            <input type="range" id="t2i-guide" min="1.0" max="2.0" step="0.1" value="1.5"
+              oninput="document.getElementById('t2i-gv').textContent=parseFloat(this.value).toFixed(1)"/>
+            <span class="rval" id="t2i-gv">1.5</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Seed <span class="tag">optional</span></label>
+          <input type="number" id="t2i-seed" placeholder="Random if blank"/>
+        </div>
+        <button class="btn-gen" id="t2i-btn" onclick="run('t2i')">Generate Image</button>
+        <div class="prog-wrap" id="t2i-prog"><div class="prog"></div></div>
+        <div class="toast" id="t2i-toast"></div>
+      </div>
+    </div>
+
+    <!-- I2I -->
+    <div class="tab-panel" id="panel-i2i">
+      <div class="panel">
+        <div class="ptitle">// image-to-image</div>
+        <div class="field">
+          <label>Input Image</label>
+          <div class="drop" id="dropzone" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
+            <input type="file" id="i2i-file" accept="image/*" onchange="loadFile(this.files[0])"/>
+            <div id="up-ph"><div class="drop-icon">⬆</div>
+              <p>Drop image or click to browse</p><p style="font-size:10px;font-family:var(--mono);margin-top:3px">PNG / JPG / WEBP</p>
+            </div>
+            <img class="drop-preview" id="up-prev" alt="preview"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Prompt</label>
+          <textarea id="i2i-prompt" placeholder="How to transform the image…">Transform into a vibrant professional advertisement poster with bold text and clean layout</textarea>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Width <span class="tag">px</span></label>
+            <select id="i2i-w"><option value="512">512</option><option value="768">768</option>
+              <option value="960" selected>960</option><option value="1024">1024</option></select></div>
+          <div class="field"><label>Height <span class="tag">px</span></label>
+            <select id="i2i-h"><option value="512">512</option><option value="768">768</option>
+              <option value="1024">1024</option><option value="1280" selected>1280</option></select></div>
+        </div>
+        <div class="field"><label>Steps</label>
+          <div class="range-wrap">
+            <input type="range" id="i2i-steps" min="10" max="60" step="5" value="30"
+              oninput="document.getElementById('i2i-sv').textContent=this.value"/>
+            <span class="rval" id="i2i-sv">30</span></div></div>
+        <div class="field"><label>Guidance</label>
+          <div class="range-wrap">
+            <input type="range" id="i2i-guide" min="1.0" max="2.0" step="0.1" value="1.5"
+              oninput="document.getElementById('i2i-gv').textContent=parseFloat(this.value).toFixed(1)"/>
+            <span class="rval" id="i2i-gv">1.5</span></div></div>
+        <div class="field"><label>Seed <span class="tag">optional</span></label>
+          <input type="number" id="i2i-seed" placeholder="Random if blank"/></div>
+        <button class="btn-gen" id="i2i-btn" onclick="run('i2i')">Transform Image</button>
+        <div class="prog-wrap" id="i2i-prog"><div class="prog"></div></div>
+        <div class="toast" id="i2i-toast"></div>
+      </div>
+    </div>
+
+    <!-- AD BUILDER -->
+    <div class="tab-panel" id="panel-ad">
+      <div class="panel">
+        <div class="ptitle">// advertisement builder — text-accurate</div>
+
+        <div class="field">
+          <label>Ad Type / Scene</label>
+          <textarea id="ad-scene" placeholder="Describe the visual scene / background…" style="min-height:64px">modern university campus exterior with students, buildings, and green spaces</textarea>
+        </div>
+
+        <div class="field">
+          <label>Style</label>
+          <input type="text" id="ad-style" value="professional poster, clean modern layout, vibrant colors, high fidelity"/>
+        </div>
+
+        <hr class="divider"/>
+        <p style="font-family:var(--mono);font-size:9px;color:var(--accent2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;">
+          — Text Elements (rendered accurately in image) —
+        </p>
+
+        <div class="field">
+          <label>Headline <span class="tag">required</span></label>
+          <input type="text" id="ad-headline" placeholder='e.g. Open House 2025' value="Open House 2025"/>
+        </div>
+
+        <div class="field">
+          <label>Subheadline <span class="tag">optional</span></label>
+          <input type="text" id="ad-sub" placeholder='e.g. Discover Your Future' value="Discover Your Future at Namal University"/>
+        </div>
+
+        <div class="field">
+          <label>Body Lines <span class="tag">add each line separately</span></label>
+          <div class="tag-list" id="body-tags"></div>
+          <div class="add-row">
+            <input type="text" id="body-input" placeholder='e.g. Date: 23rd May 2025' onkeydown="if(event.key==='Enter')addBodyLine()"/>
+            <button class="btn-add" onclick="addBodyLine()">+ Add</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Call to Action <span class="tag">optional</span></label>
+          <input type="text" id="ad-cta" placeholder='e.g. Register at namal.edu.pk' value="Register at namal.edu.pk"/>
+        </div>
+
+        <div class="field">
+          <label>Footer <span class="tag">optional</span></label>
+          <input type="text" id="ad-footer" placeholder='e.g. Namal University | Mianwali' value="Namal University | Excellence in Education"/>
+        </div>
+
+        <hr class="divider"/>
+
+        <div class="row2">
+          <div class="field"><label>Color Palette</label>
+            <input type="text" id="ad-colors" placeholder='e.g. navy blue and gold' value="navy blue, gold, white"/></div>
+          <div class="field"><label>Aspect Ratio</label>
+            <select id="ad-aspect">
+              <option value="portrait" selected>Portrait (960×1280)</option>
+              <option value="landscape">Landscape (1280×960)</option>
+              <option value="square">Square (1024×1024)</option>
+              <option value="wide">Wide (1536×864)</option>
+              <option value="a4">A4 Flyer (864×1216)</option>
+            </select></div>
+        </div>
+
+        <div class="field"><label>Layout Hint <span class="tag">optional</span></label>
+          <input type="text" id="ad-layout" placeholder='e.g. bold headline top-center, campus image right half'/></div>
+
+        <div class="field"><label>Steps</label>
+          <div class="range-wrap">
+            <input type="range" id="ad-steps" min="10" max="60" step="5" value="30"
+              oninput="document.getElementById('ad-sv').textContent=this.value"/>
+            <span class="rval" id="ad-sv">30</span></div></div>
+
+        <div class="field"><label>Seed <span class="tag">optional</span></label>
+          <input type="number" id="ad-seed" placeholder="Random if blank"/></div>
+
+        <!-- Live prompt preview -->
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;margin-top:4px;">
+          Prompt preview <span style="color:var(--accent2)">(auto-built)</span>
+        </div>
+        <div class="prompt-preview" id="ad-preview"></div>
+
+        <button class="btn-gen" id="ad-btn" onclick="run('ad')" style="margin-top:14px">Generate Ad</button>
+        <div class="prog-wrap" id="ad-prog"><div class="prog"></div></div>
+        <div class="toast" id="ad-toast"></div>
+      </div>
+    </div>
+
+  </div><!-- /left -->
+
+  <!-- ── RIGHT: Output ── -->
+  <div class="out-panel">
+    <div class="out-bar">
+      <span class="out-label">// output</span>
+      <span class="out-meta" id="out-meta">—</span>
+    </div>
+    <div class="out-body">
+      <div class="out-empty" id="out-empty">
+        <div class="ei">◻</div>
+        <p>output will appear here</p>
+      </div>
+      <img id="out-img" class="out-img" alt="Generated"/>
+      <div class="spin-ov" id="spin-ov">
+        <div class="spinner"></div>
+        <div class="spin-label" id="spin-lbl">Generating…<br/>Please wait 20–60 seconds</div>
+      </div>
+    </div>
+    <div class="dl-bar" id="dl-bar">
+      <button class="btn-dl" onclick="dl()">Download PNG</button>
+      <span class="size-tag" id="size-tag"></span>
+    </div>
+  </div>
+
+</div><!-- /grid -->
+</div><!-- /wrap -->
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let currentBlob = null;
+let inputB64    = null;
+let bodyLines   = ["Date: 23rd May 2025", "Time: 9 AM – 4 PM", "Venue: Main Campus, Mianwali"];
+
+const T2I_EXAMPLES = [
+  'A university open house poster with "Open House 2025" headline, campus background',
+  'Job posting ad with "We Are Hiring!" and "Software Engineer" role description',
+  'Admissions poster "Admissions Open 2025" for Namal University, modern design',
+  'Event flyer "Annual Tech Fest" with date "15th June" and venue text',
+  'Corporate banner with "Quarterly Results" title, professional clean layout',
+];
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // T2I example chips
+  const wrap = document.getElementById('t2i-chips');
+  T2I_EXAMPLES.forEach(ex => {
+    const c = document.createElement('button');
+    c.className = 'chip'; c.title = ex;
+    c.textContent = ex.length > 50 ? ex.slice(0,50)+'…' : ex;
+    c.onclick = () => { document.getElementById('t2i-prompt').value = ex; };
+    wrap.appendChild(c);
+  });
+
+  // Render initial body lines
+  renderBodyTags();
+
+  // Live ad-prompt preview update
+  ['ad-scene','ad-style','ad-headline','ad-sub','ad-cta','ad-footer','ad-colors','ad-aspect','ad-layout']
+    .forEach(id => document.getElementById(id)?.addEventListener('input', updatePreview));
+  updatePreview();
+
+  checkServer();
+});
+
+// ── Tab switch ─────────────────────────────────────────────────────────────────
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+// ── Server health ──────────────────────────────────────────────────────────────
+async function checkServer() {
+  const dot = document.getElementById('dot');
+  const url = document.getElementById('serverUrl').value.trim();
+  dot.className = 'dot';
+  try {
+    const r = await fetch(`${url}/health`);
+    dot.className = r.ok ? 'dot on' : 'dot off';
+  } catch { dot.className = 'dot off'; }
+}
+document.getElementById('serverUrl').addEventListener('change', checkServer);
+
+// ── File upload ────────────────────────────────────────────────────────────────
+function loadFile(file) {
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    inputB64 = e.target.result.split(',')[1];
+    const prev = document.getElementById('up-prev');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+    document.getElementById('up-ph').style.display = 'none';
+  };
+  r.readAsDataURL(file);
+}
+function onDrag(e, on) { e.preventDefault(); document.getElementById('dropzone').classList.toggle('drag', on); }
+function onDrop(e) { e.preventDefault(); document.getElementById('dropzone').classList.remove('drag'); loadFile(e.dataTransfer.files[0]); }
+
+// ── Body lines (Ad Builder) ────────────────────────────────────────────────────
+function renderBodyTags() {
+  const el = document.getElementById('body-tags');
+  el.innerHTML = '';
+  bodyLines.forEach((line, i) => {
+    const d = document.createElement('div');
+    d.className = 'tag-item';
+    d.innerHTML = `<span>${line}</span><button onclick="removeBodyLine(${i})" title="Remove">×</button>`;
+    el.appendChild(d);
+  });
+  updatePreview();
+}
+function addBodyLine() {
+  const inp = document.getElementById('body-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  bodyLines.push(val);
+  inp.value = '';
+  renderBodyTags();
+}
+function removeBodyLine(i) {
+  bodyLines.splice(i, 1);
+  renderBodyTags();
+}
+
+// ── Ad prompt preview ──────────────────────────────────────────────────────────
+function buildAdBody() {
+  const g = id => document.getElementById(id)?.value.trim() || '';
+  return {
+    scene:       g('ad-scene'),
+    style:       g('ad-style'),
+    aspect:      g('ad-aspect'),
+    headline:    g('ad-headline'),
+    subheadline: g('ad-sub') || null,
+    body_lines:  [...bodyLines],
+    cta:         g('ad-cta') || null,
+    footer:      g('ad-footer') || null,
+    color_palette: g('ad-colors') || null,
+    layout_hint:   g('ad-layout') || null,
+    num_inference_steps: parseInt(document.getElementById('ad-steps').value),
+    guidance_scale: 1.5,
+  };
+}
+
+// Client-side prompt preview mirror (matches server logic)
+const ASPECT_DIMS = {portrait:[30,40],landscape:[40,30],square:[32,32],wide:[48,27],a4:[27,38]};
+function q(s){ return `"${s.trim()}"` }
+function updatePreview() {
+  const b = buildAdBody();
+  if (!b.headline) { document.getElementById('ad-preview').style.display='none'; return; }
+  const parts = [`bold headline ${q(b.headline)} placed prominently`];
+  if (b.subheadline) parts.push(`subheadline ${q(b.subheadline)} below the headline`);
+  b.body_lines.forEach(l => parts.push(`body text line ${q(l)}`));
+  if (b.cta) parts.push(`call-to-action text ${q(b.cta)} on a distinct button or banner`);
+  if (b.footer) parts.push(`footer text ${q(b.footer)}`);
+  const [wm,hm] = ASPECT_DIMS[b.aspect] || [30,40];
+  const colorStr = b.color_palette ? ` Color palette: ${b.color_palette}.` : '';
+  const layoutStr = b.layout_hint ? ` Layout: ${b.layout_hint}.` : ' Centered hierarchy, generous whitespace, clear visual flow.';
+  const prompt = `A ${b.style} advertisement poster. Scene: ${b.scene}. The poster contains the following text rendered accurately and legibly: ${parts.join('; ')}. Typography is clean, modern, and highly readable at all sizes. No spelling errors, no blurry text, no garbled characters.${colorStr}${layoutStr}`;
+  const el = document.getElementById('ad-preview');
+  el.textContent = prompt;
+  el.style.display = 'block';
+}
+
+// ── Main run ───────────────────────────────────────────────────────────────────
+async function run(mode) {
+  const base  = document.getElementById('serverUrl').value.trim().replace(/\/$/,'');
+  const btn   = document.getElementById(`${mode}-btn`);
+  const toast = document.getElementById(`${mode}-toast`);
+  const prog  = document.getElementById(`${mode}-prog`);
+  toast.className = 'toast';
+
+  // Validation
+  if (mode === 'i2i' && !inputB64) { showToast(mode,'err','Please upload an input image first.'); return; }
+  if (mode === 'ad') {
+    const h = document.getElementById('ad-headline').value.trim();
+    if (!h) { showToast(mode,'err','Please enter a headline.'); return; }
+  }
+  if ((mode === 't2i') && !document.getElementById('t2i-prompt').value.trim()) {
+    showToast(mode,'err','Please enter a prompt.'); return;
+  }
+
+  // Build request body
+  let endpoint = '/predict';
+  let body;
+  if (mode === 't2i') {
+    endpoint = '/predict';
+    const seed = document.getElementById('t2i-seed').value;
+    body = {
+      prompt:              document.getElementById('t2i-prompt').value.trim(),
+      width:               parseInt(document.getElementById('t2i-w').value),
+      height:              parseInt(document.getElementById('t2i-h').value),
+      num_inference_steps: parseInt(document.getElementById('t2i-steps').value),
+      guidance_scale:      parseFloat(document.getElementById('t2i-guide').value),
+      ...(seed ? {seed: parseInt(seed)} : {}),
+    };
+  } else if (mode === 'i2i') {
+    endpoint = '/predict/i2i';
+    const seed = document.getElementById('i2i-seed').value;
+    body = {
+      prompt:              document.getElementById('i2i-prompt').value.trim(),
+      image_base64:        inputB64,
+      width:               parseInt(document.getElementById('i2i-w').value),
+      height:              parseInt(document.getElementById('i2i-h').value),
+      num_inference_steps: parseInt(document.getElementById('i2i-steps').value),
+      guidance_scale:      parseFloat(document.getElementById('i2i-guide').value),
+      ...(seed ? {seed: parseInt(seed)} : {}),
+    };
+  } else {
+    endpoint = '/predict/ad';
+    const seed = document.getElementById('ad-seed').value;
+    body = { ...buildAdBody(), ...(seed ? {seed: parseInt(seed)} : {}) };
+  }
+
+  // UI: loading
+  btn.disabled = true;
+  btn.textContent = mode === 'ad' ? 'Building Ad…' : 'Generating…';
+  prog.classList.add('vis');
+  showSpinner(true);
+  hideResult();
+  const t0 = Date.now();
+
+  try {
+    const res = await fetch(`${base}${endpoint}`, {
+      method:  'POST',
+      headers: {'Content-Type':'application/json','Accept':'application/json'},
+      body:    JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status} — ${(await res.text()).slice(0,200)}`);
+    const data = await res.json();
+    if (!data.success || !data.image_base64) throw new Error('Missing image_base64 in response');
+
+    const elapsed = ((Date.now()-t0)/1000).toFixed(1);
+    showResult(data, elapsed);
+    showToast(mode, 'ok', `Done in ${elapsed}s — ${data.width}×${data.height} px`);
+    if (data.prompt_used) showToast(mode,'inf','Prompt: '+data.prompt_used.slice(0,120)+'…');
+    checkServer();
+  } catch(e) {
+    console.error(e);
+    showToast(mode, 'err', e.message);
+    showSpinner(false);
+    document.getElementById('out-empty').style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = mode==='t2i' ? 'Generate Image' : mode==='i2i' ? 'Transform Image' : 'Generate Ad';
+    prog.classList.remove('vis');
+  }
+}
+
+// ── Output helpers ─────────────────────────────────────────────────────────────
+function showResult(data, elapsed) {
+  showSpinner(false);
+  const img = document.getElementById('out-img');
+  img.src = `data:image/png;base64,${data.image_base64}`;
+  img.style.display = 'block';
+  document.getElementById('out-empty').style.display = 'none';
+  document.getElementById('out-meta').textContent = `${data.width}×${data.height} · ${elapsed}s`;
+  const bytes = atob(data.image_base64);
+  const arr   = new Uint8Array(bytes.length);
+  for (let i=0;i<bytes.length;i++) arr[i]=bytes.charCodeAt(i);
+  currentBlob = new Blob([arr], {type:'image/png'});
+  document.getElementById('dl-bar').classList.add('vis');
+  document.getElementById('size-tag').textContent = `${data.width} × ${data.height} px`;
+}
+function hideResult() {
+  document.getElementById('out-img').style.display='none';
+  document.getElementById('out-empty').style.display='none';
+  document.getElementById('dl-bar').classList.remove('vis');
+  document.getElementById('out-meta').textContent='—';
+}
+function showSpinner(on, lbl) {
+  const el = document.getElementById('spin-ov');
+  el.classList.toggle('vis', on);
+  if (lbl) document.getElementById('spin-lbl').innerHTML = lbl;
+}
+function showToast(mode, type, msg) {
+  const el = document.getElementById(`${mode}-toast`);
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+}
+function dl() {
+  if (!currentBlob) return;
+  const url = URL.createObjectURL(currentBlob);
+  const a   = Object.assign(document.createElement('a'), {href:url, download:`glm-ad-${Date.now()}.png`});
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
